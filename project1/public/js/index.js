@@ -27,17 +27,14 @@ function getHexagonPoints(){
   });
 }
 
+
 function drawArea(coordinates)
 {
   console.log('coordinates:\t',coordinates);
   var tmp = [];
   for(var i = 0; i<coordinates.length; i++)
-  { console.log('c:\t',coordinates[i]);
-    tmp.push(coordinates[i].reverse());
-    console.log('t:\t',tmp[i]);
+  { tmp.push(coordinates[i].reverse());
   }
-  console.log('tmp:\t',tmp[0]);
-
 
   map.addLayer({
     'id': 'maine',
@@ -58,12 +55,11 @@ function drawArea(coordinates)
       'fill-opacity': 0.8
     }
   });
-
 }
 
 function centerMap(center)
 { map.flyTo({
-  center: [center[1],center[0]],
+  center: center.reverse(),
   zoom:8
   });
 }
