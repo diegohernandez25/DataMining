@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Example GL Map</title>
+
+    <script src='https://api.mapbox.com/mapbox-gl-js/v1.4.1/mapbox-gl.js'></script>
+    <link href='https://api.mapbox.com/mapbox-gl-js/v1.4.1/mapbox-gl.css' rel='stylesheet' />
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
+
+    <!--
+        Default public token:
+        pk.eyJ1IjoiZGllZ29oZXJuYW5kZXoyNSIsImEiOiJjazI0eGFpaXMwaTV4M25wOXF0aGQ0bzFwIn0.xZqxrObiF36MQbx-HrmR6A
+
+        ExampleGLMap
+        pk.eyJ1IjoiZGllZ29oZXJuYW5kZXoyNSIsImEiOiJjazI0eGJkZ2MyZDJ3M2VxdGV2NWdrcjg1In0.m1pzavOyco0Cn1W93-Q0Pg
+    -->
+
+    <link rel="stylesheet" type="text/css" href="css/map.css">
+    <script type="text/javascript" src="js/index.js"></script>
+
+</head>
+
+<body>
+    <div class="mapbase-wrap">
+        <div id='map'class="map"></div>
+    </div>
+    
+    <button type="button" onclick="getHexagonPoints()">Change Content</button>
+    <script>
+        mapboxgl.accessToken = 'pk.eyJ1IjoiZGllZ29oZXJuYW5kZXoyNSIsImEiOiJjazI0eGFpaXMwaTV4M25wOXF0aGQ0bzFwIn0.xZqxrObiF36MQbx-HrmR6A';
+            var map = new mapboxgl.Map({
+                container: 'map',
+                style: 'mapbox://styles/mapbox/streets-v11'
+            });
+    </script>
+
+
+
+</body>
+</html>
