@@ -42,50 +42,55 @@ app.get('/get_hexagon_example', (req, res) => {
 
 
 app.get('/get_set_hexagons', (req, res) =>{
-    console.log('resolution:\t', req.body.resolution);
+    console.log('resolution:\t', req.query.resolution);
     //console.log('resolution:\t', req.query.resolution);
 
     var dict_hex = {};
 
     var fs = require('fs');
-    fs.readFile('newFile.txt', 'utf8', function(err, text) {
-        text.split("\n").forEach(line => {
-            var lat= line.split(" ")[0];
-            var lng=line.split(" ")[1];
-            const h3Index = h3.geoToH3(lat, lng, req.body.resolution);
-            if(dict_hex[h3Index] !== undefined)
-            {
-                dict_hex[h3Index]+=1;
-            }
-            else{
-                dict_hex[h3Index]=0;
-            }
-        });
-    });
-    var maxima = 0;
-    var k;
-    var keys = Object.keys(dict_hex);
-    console.log(dict_hex);
-    console.log(keys);
-    for(i = 0; i< dict_hex.length;i++)
-    {   k = keys[i];
-        if(maxima < dict_hex[k])
-        {   maxima = dict_hex[k];
+    var text= fs.readFileSync('newFile.txt', 'utf8');
+
+
+    text.split("\n").forEach(line => {
+        var lng= line.split(" ")[0];
+
+        var lat=line.split(" ")[1];
+        const h3Index = h3.geoToH3(lat, lng, req.query.resolution);
+        if(Object.keys(dict_hex).includes(h3Index))
+        {
+            dict_hex[h3Index]++;
         }
-    }
-    var final_dict = new Object();
+        else{
+            dict_hex[h3Index]=1;
+        }
+    });
+    delete dict_hex[null];
+    var max = 0;
+    var ks = Object.keys(dict_hex);
+    ks.forEach(key=>{
+        if(max < dict_hex[key])
+            max = dict_hex[key];
+    });
+
+    var final_dict = {};
     var opacity;
     var center;
     var boundary;
+    ks.forEach(key=>{
+        opacity = dict_hex[key]/max;
+        center = h3.h3ToGeo(key);
+        boundary = h3.h3ToGeoBoundary(key);
+        final_dict[key] = {'opacity':dict_hex[key] / max, 'center': center, 'boundary':boundary};
+    });
+
     for(i = 0; i< dict_hex.length;i++)
     {   k = keys[i];
-        opacity = dict_hex[k]/maxima;
+        opacity = dict_hex[k]/max;
         center = h3.h3ToGeo(k);
         boundary = h3.h3ToGeoBoundary(k);
-        final_dict[k] = {'opacity':dict_hex[k] / maxima, 'center': center, 'boundary':boundary};
+        final_dict[k] = {'opacity':dict_hex[k] / max, 'center': center, 'boundary':boundary};
     }
     const response = JSON.stringify(final_dict);
-    console.log('response:\t',response);
     res.send(response);
 });
 
@@ -98,4 +103,4 @@ var server = app.listen(8081, function () {
    var port = server.address().port
 
    console.log("Example app listening at http://%s:%s", host, port)
-})
+});
