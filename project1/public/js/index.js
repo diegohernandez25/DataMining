@@ -152,7 +152,7 @@ function getAreaAnalysis(coordinates)
     "lng": coordinates.lng,
     "resolution": 8
   };
-
+  var dict = null;
   $.ajax(
       {
         dataType:'json',
@@ -161,9 +161,18 @@ function getAreaAnalysis(coordinates)
         url: '/get_loc_hexagon',
         data: x,
         success: function(data){
-          console.log(data);
-        },
-      });
+          console.log('CHART:\t',data.chart);
+          new Chart(document.getElementById("line-chart"),data.chart);
+        }
+    });
+
+
+
+
+
+    console.log('dictqwdwq:\t',dict);
+    console.log('dict.chart:\t',dict['chart']);
+    return dict.chart;
 }
 
 function getPois(pois)

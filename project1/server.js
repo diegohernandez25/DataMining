@@ -1,7 +1,7 @@
 var express = require('express');
-var Chart = require('chart.js')
-
+var Chart = require('chart.js');
 const h3 = require("h3-js");
+var sql = require("mssql");
 var app = express();
 
 var bodyParser = require('body-parser');
@@ -10,6 +10,14 @@ app.use(bodyParser.urlencoded({ extended: true })); // for parsing application/x
 
 
 var colors = ["#b4ff14","#ffd714","#ffa347","#7f2727"]
+
+
+var config = {
+    user: 'ed77076',
+    password: 'rodinhas123',
+    server: 'deti-sql-aulas.ua.pt',
+    database: 'ed77076'
+};
 
 
 app.use(express.static(__dirname + '/public'));
@@ -46,18 +54,49 @@ app.get('/get_hexagon_example', (req, res) => {
 });
 
 app.get('/get_loc_hexagon', (req,res) =>{
+  console.log("res:\t",req.query.resolution);
   const h3Index = h3.geoToH3(req.query.lat, req.query.lng, req.query.resolution);
   const h3Center = h3.h3ToGeo(h3Index);
   const hexBoundary = h3.h3ToGeoBoundary(h3Index);
-  const resJson = JSON.stringify(
-    { index:h3Index,
-      center:h3Center,
-      boundaries: hexBoundary
-    }
-  );
-  //TODO: Do more analisys here.
-  console.log(resJson);
-  res.send(resJson);
+
+  var days = Array.from({length: 7}, (x,i) => 0);
+
+  for(var i =0; i<days.length; i++)
+  {  days[i] = {
+       'data': Array.from({length: 24}, (x,i) => i),
+       'label':"ola",
+       'borderColor': "#c45850",
+       fill:false
+     };
+  }
+  //Database
+  sql.connect(config, function (err) {
+      if (err) console.log(err);
+
+      var request = new sql.Request();
+      query = "SELECT distinct [ed77076].[finalDB].[D_DATE].[DIA_DA_SEMANA] as day, [HOUR] as hour ,[NTAXIS] as num FROM [ed77076].[finalDB].[F_COUNT_ON_LOCATION] JOIN [ed77076].[finalDB].[D_DATE] ON [ed77076].[finalDB].[F_COUNT_ON_LOCATION].[ID_DATE] = [ed77076].[finalDB].[D_DATE].[ID_DATE] JOIN [ed77076].[finalDB].[D_LOCATION] ON [ed77076].[finalDB].[F_COUNT_ON_LOCATION].[ID_LOCATION] = [ed77076].[finalDB].[D_LOCATION].[ID_LOCATION] WHERE [ed77076].[finalDB].[D_LOCATION].[AREAID] LIKE " + "\'"+h3Index+"\';";
+
+      var chart_struct = setDataChart();
+      request.query(query , function(err, recordset){
+        if (err) console.log(err);
+        console.log(recordset.recordset);
+        recordset.recordset.forEach(e=>{
+          chart_struct['data']['datasets'][e.day]['data'][e.hour] = e.num;
+        });
+        console.log('chart_struct:\t',chart_struct);
+        const resJson = JSON.stringify(
+          { index:h3Index,
+            center:h3Center,
+            boundaries: hexBoundary,
+            chart: chart_struct
+          }
+        );
+        console.log('resJson:\t',resJson);
+        res.send(resJson);
+        sql.close();
+      });
+
+  });
 });
 
 
@@ -68,34 +107,35 @@ app.get('/get_pois', (req, res) =>{
 
 
 app.get('/get_set_hexagons', (req, res) =>{
-    console.log('resolution:\t', req.query.resolution);
-    //console.log('resolution:\t', req.query.resolution);
-
-    var dict_hex = {};
-
-    var fs = require('fs');
-    var text= fs.readFileSync('newFile.txt', 'utf8');
-
-
-    text.split("\n").forEach(line => {
-        var lng= line.split(" ")[0];
-
-        var lat=line.split(" ")[1];
-        const h3Index = h3.geoToH3(lat, lng, req.query.resolution);
-        if(Object.keys(dict_hex).includes(h3Index))
-        {
-            dict_hex[h3Index]++;
-        }
-        else{
-            dict_hex[h3Index]=1;
-        }
+    query = "SELECT [AREAID] as area ,SUM([NTAXIS]) as num FROM [ed77076].[finalDB].[F_COUNT_ON_LOCATION] JOIN [ed77076].[finalDB].[D_LOCATION] ON [ed77076].[finalDB].[F_COUNT_ON_LOCATION].[ID_LOCATION] = [ed77076].[finalDB].[D_LOCATION].[ID_LOCATION] GROUP BY AREAID;";
+    sql.connect(config, function (err) {
+        if (err) console.log(err);
+        var request = new sql.Request();
+        request.query(query, function(err, recordset){
+          if (err) console.log(err);
+          var dict_hex = {};
+          recordset.recordset.forEach(e=>{
+            dict_hex[e.area]=e.num;
+          });
+          console.log('dict_hex:\t',dict_hex);
+          var final_dict = get_set_hexagons(dict_hex);
+          var response = JSON.stringify(final_dict);
+          console.log(response);
+          res.send(response);
+          sql.close();
+        });
     });
-    delete dict_hex[null];
+});
+
+
+function get_set_hexagons(dictionary)
+{
+    console.log('dictionary:\t',dictionary);
     var max = 0;
-    var ks = Object.keys(dict_hex);
+    var ks = Object.keys(dictionary);
     ks.forEach(key=>{
-        if(max < dict_hex[key] & key != "8831aa5535fffff")
-            max = dict_hex[key];
+        if(max < dictionary[key] & key != "8831aa5535fffff")
+            max = dictionary[key];
     });
 
     var final_dict = {};
@@ -107,22 +147,48 @@ app.get('/get_set_hexagons', (req, res) =>{
     ks.forEach(key=>{
         if(key != "8831aa5535fffff")
         {
-          opacity = dict_hex[key]/max;
+          opacity = dictionary[key]/max;
           center = h3.h3ToGeo(key);
           boundary = h3.h3ToGeoBoundary(key);
           color = Math.floor(opacity * (colors.length+1));
-          console.log(color);
-          final_dict[key] = {'color':colors[color],'opacity':dict_hex[key] / max, 'center': center, 'boundary':boundary};
+          final_dict[key] = {'color':colors[color],'opacity':dictionary[key] / max, 'center': center, 'boundary':boundary};
         }
     });
+    return final_dict;
+}
 
-    const response = JSON.stringify(final_dict);
-    res.send(response);
-});
+function setDataChart(){
+  var colors = ["#3e95cd", "#8e5ea2", "#3cba9f", "#e8c3b9", "#c45850", "#c49950" , "#895e92"];
+  var labels = ['day 1','day 2','day 3','day 4','day 5','day 6','day 7'];
+
+  var final = {
+    type: 'line',
+    data: {
+      labels: Array.from({length: 7}, (x,i) => i),
+      datasets: []
+    },
+    options: {
+      title: {
+        display: true,
+        text: 'Historic)'
+      }
+    }
+  };
+
+  for(var i =0; i<7; i++)
+  {    final['data']['datasets'].push({
+          data: new Array(24).fill(0),
+          label: labels[i],
+          borderColor: colors[i],
+          fill:false
+        });
+  };
+  return final;
+}
 
 var server = app.listen(8081, function () {
-   var host = server.address().address
-   var port = server.address().port
-
-   console.log("Example app listening at http://%s:%s", host, port)
+    setDataChart()
+    var host = server.address().address
+    var port = server.address().port
+    console.log("Example app listening at http://%s:%s", host, port)
 });
