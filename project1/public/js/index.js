@@ -78,7 +78,7 @@ function drawArea(coordinates, id, opacity)
 
 
 function createSetOfPolygons(data)
-{
+{   console.log(data);
     var lst_features = [];
     var lst_layers = [];
     var keys = Object.keys(data);
@@ -110,14 +110,13 @@ function createSetOfPolygons(data)
             "source": "tokyo",
 
             "paint": {
-                "fill-color": "#888888",
-                "fill-opacity": data[k].opacity
+                //"fill-color": "#888888",
+                "fill-color": data[k].color,
+                "fill-opacity": 0.8
+                //"fill-opacity": data[k].opacity
             },
             "filter": ["==", "icon", k]
         });
-
-
-
     });
 
     map.addSource("tokyo",{
@@ -143,4 +142,44 @@ function centerMap(center)
 }
 
 
+function getAreaAnalysis(coordinates)
+{ map.flyTo({
+    center: coordinates,
+    zoom:15
+  });
+  var x = {
+    "lat": coordinates.lat,
+    "lng": coordinates.lng,
+    "resolution": 8
+  };
 
+  $.ajax(
+      {
+        dataType:'json',
+        type: 'get',
+        contentType: 'application/x-www-form-urlencoded; charset=UTF-8',
+        url: '/get_loc_hexagon',
+        data: x,
+        success: function(data){
+          console.log(data);
+        },
+      });
+}
+
+function getPois(pois)
+{   var x = {
+      'poi_types': pois
+    }
+    $.ajax(
+    {
+      dataType:'json',
+      type: 'get',
+      contentType: 'application/x-www-form-urlencoded; charset=UTF-8',
+      url: '/get_pois',
+      data: x,
+      success: function(data){
+        console.log(data);
+      },
+    });
+
+}

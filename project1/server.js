@@ -1,10 +1,16 @@
 var express = require('express');
+var Chart = require('chart.js')
+
 const h3 = require("h3-js");
 var app = express();
 
 var bodyParser = require('body-parser');
 app.use(bodyParser.json()); // for parsing application/json
 app.use(bodyParser.urlencoded({ extended: true })); // for parsing application/x-www-form-urlencoded
+
+
+var colors = ["#b4ff14","#ffd714","#ffa347","#7f2727"]
+
 
 app.use(express.static(__dirname + '/public'));
 
@@ -39,6 +45,26 @@ app.get('/get_hexagon_example', (req, res) => {
   res.send(resJson)
 });
 
+app.get('/get_loc_hexagon', (req,res) =>{
+  const h3Index = h3.geoToH3(req.query.lat, req.query.lng, req.query.resolution);
+  const h3Center = h3.h3ToGeo(h3Index);
+  const hexBoundary = h3.h3ToGeoBoundary(h3Index);
+  const resJson = JSON.stringify(
+    { index:h3Index,
+      center:h3Center,
+      boundaries: hexBoundary
+    }
+  );
+  //TODO: Do more analisys here.
+  console.log(resJson);
+  res.send(resJson);
+});
+
+
+app.get('/get_pois', (req, res) =>{
+  console.log('poi_types:\t', req.query.poi_types);
+  res.send(req.query.poi_types);
+});
 
 
 app.get('/get_set_hexagons', (req, res) =>{
@@ -68,7 +94,7 @@ app.get('/get_set_hexagons', (req, res) =>{
     var max = 0;
     var ks = Object.keys(dict_hex);
     ks.forEach(key=>{
-        if(max < dict_hex[key])
+        if(max < dict_hex[key] & key != "8831aa5535fffff")
             max = dict_hex[key];
     });
 
@@ -76,27 +102,23 @@ app.get('/get_set_hexagons', (req, res) =>{
     var opacity;
     var center;
     var boundary;
+    console.log('colors length:\t',colors.length);
+    console.log('colors:\t',colors);
     ks.forEach(key=>{
-        opacity = dict_hex[key]/max;
-        center = h3.h3ToGeo(key);
-        boundary = h3.h3ToGeoBoundary(key);
-        final_dict[key] = {'opacity':dict_hex[key] / max, 'center': center, 'boundary':boundary};
+        if(key != "8831aa5535fffff")
+        {
+          opacity = dict_hex[key]/max;
+          center = h3.h3ToGeo(key);
+          boundary = h3.h3ToGeoBoundary(key);
+          color = Math.floor(opacity * (colors.length+1));
+          console.log(color);
+          final_dict[key] = {'color':colors[color],'opacity':dict_hex[key] / max, 'center': center, 'boundary':boundary};
+        }
     });
 
-    for(i = 0; i< dict_hex.length;i++)
-    {   k = keys[i];
-        opacity = dict_hex[k]/max;
-        center = h3.h3ToGeo(k);
-        boundary = h3.h3ToGeoBoundary(k);
-        final_dict[k] = {'opacity':dict_hex[k] / max, 'center': center, 'boundary':boundary};
-    }
     const response = JSON.stringify(final_dict);
     res.send(response);
 });
-
-
-
-
 
 var server = app.listen(8081, function () {
    var host = server.address().address

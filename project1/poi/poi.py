@@ -13,12 +13,16 @@ def distance_coordinates(location1, location2):
 	c = 2 * atan2(sqrt(a), sqrt(1 - a))
 	return R * c
 
-def get_poi(center, radius, type_loc, key):
+def get_poi(center, radius, type_loc, key, max=1000):
 	url = get_url(center, radius, type_loc, key)
 	r	= requests.get(url=url).json()
-	tokenpage = r["next_page_token"]
 	results = r["results"]
+	if "next_page_token" not in r.keys():
+		return results
+
+	tokenpage = r["next_page_token"]
 	while True:
+	#for i in range(0,max):
 		time.sleep(2) 	#If it does not waits for 2 seconds, it will get INVALID_REQUEST.
 						#For more information:
 						#	https://github.com/slimkrazy/python-google-places/issues/112
@@ -65,14 +69,18 @@ def write_list_to_file(lst, path):
 def get_all_poi(location, key, radius):
 	poi_types = ["airport", "amusement_park", "art_gallery", "casino", "cemetery",
 			 "church", "city_hall", "hindu_temple", "university", "stadium", 
-			  "rv_park", "park", "museum"]
+			  "rv_park", "park", "museum", "place_of_worship"]
 	#poi_types = ["university"]
 	result = list()
+	n = len(poi_types)
+	cnt = 0
 	for t in poi_types:
-		tmpresult = get_poi(location, radius,t, key)
+		print((cnt/n)*100, end="\r")
+		tmpresult = get_poi(location, radius,t, key,10)
 		tmpresult = parse_locations(tmpresult, t)
+		cnt+=1
 		result += tmpresult
-	print(result)
+	#print(result)
 	return result
 		
 
