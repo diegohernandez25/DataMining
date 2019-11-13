@@ -53,47 +53,71 @@ app.get('/get_hexagon_example', (req, res) => {
   res.send(resJson)
 });
 
+
+
 app.get('/get_loc_hexagon', (req,res) =>{
   console.log("res:\t",req.query.resolution);
   const h3Index = h3.geoToH3(req.query.lat, req.query.lng, req.query.resolution);
   const h3Center = h3.h3ToGeo(h3Index);
   const hexBoundary = h3.h3ToGeoBoundary(h3Index);
+  var geojson = null;
+  //Get Poi
+  /*sql.connect(config, function (err) {
+    if (err) console.log(err);
 
-  var days = Array.from({length: 7}, (x,i) => 0);
+    var request = new sql.Request();
+    query = "SELECT distinct [LOCNAME] as locname ,[LAT] as lat, [LONG] as lng,[LOCTYPE] as type FROM [ed77076].[finalDB].[F_COUNT_ON_LOCATION] JOIN [ed77076].[finalDB].[D_LOCATION] ON [ed77076].[finalDB].[D_LOCATION].[ID_LOCATION] = [ed77076].[finalDB].[D_LOCATION].[ID_LOCATION] WHERE [AREAID] LIKE " +
+            "\'"+h3Index+"\';";
+    console.log('POI QUERY:\t', query);
 
-  for(var i =0; i<days.length; i++)
-  {  days[i] = {
-       'data': Array.from({length: 24}, (x,i) => i),
-       'label':"ola",
-       'borderColor': "#c45850",
-       fill:false
-     };
-  }
+    var request = new sql.Request();
+
+    request.query(query , function(err, recordset){
+      if (err) console.log(err);
+      geojeson = setPinsPOIstruct(recordset.recordset);
+      sql.close();
+    });
+
+  });*/
+
   //Database
   sql.connect(config, function (err) {
       if (err) console.log(err);
 
-      var request = new sql.Request();
-      query = "SELECT distinct [ed77076].[finalDB].[D_DATE].[DIA_DA_SEMANA] as day, [HOUR] as hour ,[NTAXIS] as num FROM [ed77076].[finalDB].[F_COUNT_ON_LOCATION] JOIN [ed77076].[finalDB].[D_DATE] ON [ed77076].[finalDB].[F_COUNT_ON_LOCATION].[ID_DATE] = [ed77076].[finalDB].[D_DATE].[ID_DATE] JOIN [ed77076].[finalDB].[D_LOCATION] ON [ed77076].[finalDB].[F_COUNT_ON_LOCATION].[ID_LOCATION] = [ed77076].[finalDB].[D_LOCATION].[ID_LOCATION] WHERE [ed77076].[finalDB].[D_LOCATION].[AREAID] LIKE " + "\'"+h3Index+"\';";
 
-      var chart_struct = setDataChart();
+      var request = new sql.Request();
+      query = "SELECT distinct [LOCNAME] as locname ,[LAT] as lat, [LONG] as lng,[LOCTYPE] as type FROM [ed77076].[finalDB].[F_COUNT_ON_LOCATION] JOIN [ed77076].[finalDB].[D_LOCATION] ON [ed77076].[finalDB].[D_LOCATION].[ID_LOCATION] = [ed77076].[finalDB].[D_LOCATION].[ID_LOCATION] WHERE [AREAID] LIKE " +
+              "\'"+h3Index+"\';";
+      console.log('POI QUERY:\t', query);
+
+      var request = new sql.Request();
+      var g;
       request.query(query , function(err, recordset){
         if (err) console.log(err);
-        console.log(recordset.recordset);
-        recordset.recordset.forEach(e=>{
-          chart_struct['data']['datasets'][e.day]['data'][e.hour] = e.num;
+        g = setPinsPOIstruct(recordset.recordset);
+        console.log('g:',g);
+        var request = new sql.Request();
+        query = "SELECT distinct [ed77076].[finalDB].[D_DATE].[DIA_DA_SEMANA] as day, [HOUR] as hour ,[NTAXIS] as num FROM [ed77076].[finalDB].[F_COUNT_ON_LOCATION] JOIN [ed77076].[finalDB].[D_DATE] ON [ed77076].[finalDB].[F_COUNT_ON_LOCATION].[ID_DATE] = [ed77076].[finalDB].[D_DATE].[ID_DATE] JOIN [ed77076].[finalDB].[D_LOCATION] ON [ed77076].[finalDB].[F_COUNT_ON_LOCATION].[ID_LOCATION] = [ed77076].[finalDB].[D_LOCATION].[ID_LOCATION] WHERE [ed77076].[finalDB].[D_LOCATION].[AREAID] LIKE " + "\'"+h3Index+"\';";
+
+        var chart_struct = setDataChart();
+        request.query(query , function(err, recordset){
+          if (err) console.log(err);
+          console.log(recordset.recordset);
+          recordset.recordset.forEach(e=>{
+            chart_struct['data']['datasets'][e.day]['data'][e.hour] = e.num;
+          });
+          console.log('chart_struct:\t',chart_struct);
+          const resJson = JSON.stringify(
+            { index:h3Index,
+              center:h3Center,
+              boundaries: hexBoundary,
+              chart: chart_struct,
+              features: g
+            }
+          );
+          res.send(resJson);
+          sql.close();
         });
-        console.log('chart_struct:\t',chart_struct);
-        const resJson = JSON.stringify(
-          { index:h3Index,
-            center:h3Center,
-            boundaries: hexBoundary,
-            chart: chart_struct
-          }
-        );
-        console.log('resJson:\t',resJson);
-        res.send(resJson);
-        sql.close();
       });
 
   });
@@ -164,7 +188,7 @@ function setDataChart(){
   var final = {
     type: 'line',
     data: {
-      labels: Array.from({length: 7}, (x,i) => i),
+      labels: Array.from({length: 24}, (x,i) => i),
       datasets: []
     },
     options: {
@@ -186,8 +210,34 @@ function setDataChart(){
   return final;
 }
 
+
+function setPinsPOIstruct(coordinates)
+{
+  var geojson = {
+    "type": "FeatureCollection",
+    "features": []
+  };
+  coordinates.forEach(c=>{
+    geojson['features'].push(
+      {
+        "type": "Feature",
+        "properties": {
+          "message": c['locname'] + "\nType: " + c['type'],
+          "iconSize": [40,40]
+        },
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+            c['lng'],
+            c['lat']
+          ]
+        }
+      });
+  });
+  return geojson;
+}
+
 var server = app.listen(8081, function () {
-    setDataChart()
     var host = server.address().address
     var port = server.address().port
     console.log("Example app listening at http://%s:%s", host, port)
