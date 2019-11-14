@@ -1,9 +1,9 @@
 import time
-import json 
+import json
 import requests
 
 from math import sin, cos, sqrt, atan2, radians
-from h3 import h3 
+from h3 import h3
 
 def distance_coordinates(location1, location2):
 	R	= 6373
@@ -68,9 +68,10 @@ def write_list_to_file(lst, path):
 
 def get_all_poi(location, key, radius):
 	poi_types = ["airport", "amusement_park", "art_gallery", "casino", "cemetery",
-			 "church", "city_hall", "hindu_temple", "university", "stadium", 
+			 "church", "city_hall", "hindu_temple", "university", "stadium",
 			  "rv_park", "park", "museum", "place_of_worship"]
-	#poi_types = ["university"]
+	
+	#poi_types = ["point_of_interest"]
 	result = list()
 	n = len(poi_types)
 	cnt = 0
@@ -82,12 +83,11 @@ def get_all_poi(location, key, radius):
 		result += tmpresult
 	#print(result)
 	return result
-		
+
 
 if __name__ == "__main__":
 	location = (39.913818, 116.363625)
 	key = "AIzaSyDDuuTiQwp9tXWUTWE1tRs3oYCr90Lz6YE"
 	radius = 30
-	result = get_all_poi(location, key, radius) 
+	result = get_all_poi(location, key, radius)
 	write_list_to_file(result, "output.csv")
-	
