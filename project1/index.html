@@ -71,39 +71,7 @@
           console.log('final:\t',dict);
         });
     </script>
-    <h1> Types of point of interest.</h1>
-
-    <input type="checkbox" name="airport" value="airport"> Airport<br>
-    <input type="checkbox" name="amusement_park" value="amusement_park" > Amusement Park<br>
-    <input type="checkbox" name="art_gallery" value="art_gallery" > Art Gallery<br>
-    <input type="checkbox" name="casino" value="casino" > Casino<br>
-    <input type="checkbox" name="cementery" value="cementery" > Cementery<br>
-    <input type="checkbox" name="church" value="church" > Church<br>
-    <input type="checkbox" name="city_hall" value="city_hall" > City Hall<br>
-    <input type="checkbox" name="university" value="university" >University<br>
-    <input type="checkbox" name="hindu_temple" value="hindu_temple" > Hindu Temple<br>
-    <input type="checkbox" name="stadium" value="stadium" >Stadium<br>
-    <input type="checkbox" name="rv_park" value="rv_park" >RV Park<br>
-    <input type="checkbox" name="park" value="park" >Park<br>
-    <input type="checkbox" name="museum" value="museum" >Museum<br>
-    <input type="checkbox" name="place_of_worship" value="place_of_worship" >Place of Worship<br>
-    <input type="submit" id="submit_btn" value="Submit">
-
     <canvas id="line-chart" width="800" height="450"></canvas>
-    
-    <script>
-    $("#submit_btn").on('click', function(){
-      var checkbox_value = [];
-      $(":checkbox").each(function(){
-        var ischecked = $(this).is(":checked");
-        if(ischecked){
-          checkbox_value.push($(this).val());
-        }
-      });
-      getPois(checkbox_value);
-    });
-    </script>
-
 
 </body>
 </html>

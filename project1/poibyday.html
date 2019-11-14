@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Example GL Map</title>
+
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="css/map.css">
+    <script type="text/javascript" src="js/index.js"></script>
+
+    <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
+    <script src='https://api.tiles.mapbox.com/mapbox-gl-js/v1.5.0/mapbox-gl.js'></script>
+    <link href='https://api.tiles.mapbox.com/mapbox-gl-js/v1.5.0/mapbox-gl.css' rel='stylesheet' />
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.5.0/Chart.min.js"></script>
+
+
+</head>
+
+<body>
+    <h1> Total number of affluency during the week by Place Type.</h1>
+    <canvas id="line-chart-day" width="800" height="450"></canvas>
+    <div>
+      <input type="submit" id="submit_poi_by_day" value="Load">
+    </div>
+
+    <script>
+    $("#submit_poi_by_day").on('click', function(){
+      loadPOIPlotsByDay();
+    });
+    </script>
+</body>
+</html>

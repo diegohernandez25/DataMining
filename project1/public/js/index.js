@@ -52,9 +52,6 @@ function getAllHexagons(){
 
 function drawArea(coordinates, id, opacity)
 {
-  console.log('coordinates:\t',coordinates);
-
-
   map.addLayer({
     'id': 'map1',
     'type': 'fill',
@@ -78,8 +75,7 @@ function drawArea(coordinates, id, opacity)
 
 
 function createSetOfPolygons(data)
-{   console.log(data);
-    var lst_features = [];
+{   var lst_features = [];
     var lst_layers = [];
     var keys = Object.keys(data);
 
@@ -161,14 +157,13 @@ function getAreaAnalysis(coordinates)
         url: '/get_loc_hexagon',
         data: x,
         success: function(data){
-          console.log('CHART:\t',data.chart);
           new Chart(document.getElementById("line-chart"),data.chart);
           var geojson = data.features;
-          console.log('AJAX GEOJSON:\t',geojson);
           geojson.features.forEach(function(marker) {
             var el = document.createElement('div');
             el.className = 'marker';
             el.style.backgroundImage = 'url(https://placekitten.com/g/' + marker.properties.iconSize.join('/') + '/)';
+            //el.style.backgroundImage = 'img/redcircle.png';
             el.style.width = marker.properties.iconSize[0] + 'px';
             el.style.height = marker.properties.iconSize[1] + 'px';
 
@@ -185,20 +180,52 @@ function getAreaAnalysis(coordinates)
     return dict.chart;
 }
 
-function getPois(pois)
-{   var x = {
-      'poi_types': pois
-    }
-    $.ajax(
+function loadPOIPlots(checkbox_vals)
+{
+  $.ajax(
+  {
+    dataType:'json',
+    type: 'get',
+    contentType: 'application/x-www-form-urlencoded; charset=UTF-8',
+    url: '/analyse_pois/'+checkbox_vals[0],
+    success: function(data){
+      new Chart(document.getElementById("line-chart-day"),data);
+    },
+  });
+}
+
+function loadPOIPlotsByDay()
+{  $.ajax({
+    dataType:'json',
+    type: 'get',
+    contentType: 'application/x-www-form-urlencoded; charset=UTF-8',
+    url: '/analyse_poitype_by_day',
+    success: function(data){
+      new Chart(document.getElementById("line-chart-day"),data);
+    },
+  });
+
+}
+
+function loadPOIMap(checkbox_value, hour){
+  var x = {
+    'day': checkbox_value[0],
+    'type': checkbox_value[1],
+    'hour': hour,
+  };
+  $.ajax(
     {
       dataType:'json',
       type: 'get',
       contentType: 'application/x-www-form-urlencoded; charset=UTF-8',
-      url: '/get_pois',
       data: x,
+      url: '/analyse_pois_map',
       success: function(data){
-        console.log(data);
+        createSetOfPolygons(data);
       },
     });
+};
 
+function clearAllLayers(){
+  draw.deleteAll().getAll();
 }

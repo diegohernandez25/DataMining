@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Example GL Map</title>
+
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="css/map.css">
+    <script type="text/javascript" src="js/index.js"></script>
+
+    <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
+    <script src='https://api.tiles.mapbox.com/mapbox-gl-js/v1.5.0/mapbox-gl.js'></script>
+    <link href='https://api.tiles.mapbox.com/mapbox-gl-js/v1.5.0/mapbox-gl.css' rel='stylesheet' />
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.5.0/Chart.min.js"></script>
+
+
+</head>
+
+<body>
+    <h1> Types of point of interest.</h1>
+
+    <canvas id="line-chart-day" width="800" height="450"></canvas>
+    <div>
+      <input type="checkbox" name="day1" value=0> Domingo<br>
+      <input type="checkbox" name="day2" value=1> Segunda <br>
+      <input type="checkbox" name="day3" value=2> Terça <br>
+      <input type="checkbox" name="day4" value=3> Quarta <br>
+      <input type="checkbox" name="day5" value=4> Quinta <br>
+      <input type="checkbox" name="day6" value=5> Sexta <br>
+      <input type="checkbox" name="day7" value=6> Sabado <br>
+      <input type="submit" id="submit_btn_day" value="Submit">
+
+    </div>
+
+    <script>
+    $("#submit_btn_day").on('click', function(){
+      var checkbox_value = [];
+      $(":checkbox").each(function(){
+        var ischecked = $(this).is(":checked");
+        if(ischecked){
+          checkbox_value.push($(this).val());
+        }
+      });
+      loadPOIPlots(checkbox_value);
+    });
+    </script>
+</body>
+</html>
